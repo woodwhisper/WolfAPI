@@ -7,8 +7,8 @@
  * WolfAPI is a simple PHP based API designed to allow simple API only requests.
  * As such there is no native view support, everything goes through JSON only.
  */
-
-    include 'core/src/Core';
+    ini_set('display_errors', 1);
+    error_reporting(~0);
+    include 'core/src/Core.php';
     $runner = \WolfAPI\Core::getInstance();
     $runner->run();
-    $runner->output();

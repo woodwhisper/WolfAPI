@@ -11,10 +11,12 @@ namespace WolfAPI;
 
 class Router
 {
-    protected $myself;
+    static protected $myself;
+    protected $core;
 
     private function __construct()
     {
+        $this->core = Core::getInstance();
     }
 
     static function getInstance() {
@@ -29,5 +31,24 @@ class Router
      */
     public function runModule(){
         return [];
+    }
+
+    /**
+     * Default output for the moment.
+     */
+    public function runOutput($output, $success = TRUE)
+    {
+        $successString = $success ? 'success' : 'failure';
+        $output_array = ['status' => $successString, 'response' => $output];
+        if ($this->core->amTiming()) {
+            $output_array['execution_time'] = $this->core->getTime();
+        }
+        $output_string = json_encode($output_array);
+        if (empty($output_string)) {
+            throw new \Exception ('Unable to compile output array');
+        }
+        header('Content-Type: application/json');
+        echo $output_string;
+        exit;
     }
 }

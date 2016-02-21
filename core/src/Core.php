@@ -11,11 +11,32 @@ namespace WolfAPI;
 
 class Core
 {
-    protected $myself;
+    protected static $myself;
+
+    // @var float Time started.
+    protected $timerStart;
+    // @var bool Am I recording time.
+    protected $timing;
+    protected $output;
+
+    protected $moduleFile = 'modules.data';
 
     private function __construct()
     {
         // Initalization functions live here.
+        $this->timerStart = microtime();
+        $this->timing = true;
+
+        $loadList = file($this->moduleFile);
+        foreach ($loadList as $line) {
+            $temp = explode(":", $line);
+            if (count($temp) == 2){
+                $file = trim($temp[0])."/src/".trim($temp[1]).".php";
+                if (file_exists($file)) {
+                    include $file;
+                }
+            }
+        }
     }
 
     static function getInstance() {
@@ -25,21 +46,33 @@ class Core
         return self::$myself;
     }
 
-    function run()
+    public function run()
     {
-        $router = Router::getInstance();
-        $this->output = $router->runModule();
-    }
-
-    function output()
-    {
-        $output_string = json_encode(['status' => 'success', 'response' => $this->output]);
-        if (!empty($output_string)) {
-
-        } else {
-            $output_string = json_encode(['status' => 'failure']);
+        try {
+            $router = Router::getInstance();
+            $this->output = $router->runModule();
+            $router->runOutput($this->output);
+        } catch (\RuntimeException $e) {
+            $error_array = ['message' => $e->getMessage()];
+            if ($this->debug) {
+                $error_array['file'] = $e->getFile();
+                $error_array['line'] = $e->getLine();
+            }
+            $router->runOutput($error_array, FALSE);
         }
-        header('Content-Type: application/json');
-        echo $output_string;
     }
+
+    /**
+     * Get the time since the beginning of the execution.
+     */
+    public function getTime() {
+        $now = microtime();
+        $time = $now - $this->timerStart;
+        return $time;
+    }
+
+    public function amTiming() {
+        return $this->timing;
+    }
+
 }

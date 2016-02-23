@@ -10,5 +10,6 @@
     ini_set('display_errors', 1);
     error_reporting(~0);
     include 'core/src/Core.php';
+    ob_start();
     $runner = \WolfAPI\Core::getInstance();
     $runner->run();

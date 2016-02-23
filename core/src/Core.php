@@ -19,24 +19,44 @@ class Core
     protected $timing;
     protected $output;
 
+    protected $moduleList = [];
+
     protected $moduleFile = 'modules.data';
 
     private function __construct()
     {
         // Initalization functions live here.
-        $this->timerStart = microtime();
+        $this->timerStart = microtime(TRUE);
         $this->timing = true;
 
         $loadList = file($this->moduleFile);
         foreach ($loadList as $line) {
             $temp = explode(":", $line);
             if (count($temp) == 2){
-                $file = trim($temp[0])."/src/".trim($temp[1]).".php";
-                if (file_exists($file)) {
-                    include $file;
+                switch($temp[0]) {
+                    case 'core':
+                        $file = trim($temp[0])."/src/".trim($temp[1]).".php";
+                        if (file_exists($file)) {
+                            include $file;
+                        }
+                        break;
+
+                    case 'module':
+                        $file = "module/" . trim($temp[1])."/src/Base.php";
+                        if (file_exists($file)) {
+                            include $file;
+                            $this->moduleList[] = trim($temp[1]);
+                            $full_class = trim($temp[1]) . "\Base";
+                            new $full_class();
+                        }
+                        break;
                 }
             }
         }
+    }
+
+    public function getModuleList() {
+        return $this->moduleList;
     }
 
     static function getInstance() {
@@ -66,7 +86,7 @@ class Core
      * Get the time since the beginning of the execution.
      */
     public function getTime() {
-        $now = microtime();
+        $now = microtime(TRUE);
         $time = $now - $this->timerStart;
         return $time;
     }
